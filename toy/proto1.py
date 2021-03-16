@@ -29,7 +29,7 @@ sumin_face_encoding = face_recognition.face_encodings(sumin_image)[0]
 known_face_encodings = [
     obama_face_encoding,
     biden_face_encoding,
-    sumin_face_encoding
+    sumin_face_encoding,
 ]
 known_face_names = [
     "Barack Obama",

@@ -95,11 +95,24 @@ if __name__ == '__main__':
     device = torch.device("cpu" if args.cpu else "cuda")
     net = net.to(device)
 
-    # testing begin
-    for i in range(1):
-        image_path = "./img/sample3.jpg"
+    cap = cv2.VideoCapture("stop.mp4")
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    output_movie = cv2.VideoWriter("output_stop_tiny_mosaic.mp4", fourcc, 29.97, (width, height))
+    frame_number = 0
+
+    # testing begin
+    while cap.isOpened():
+        success, image = cap.read()
+        frame_number += 1
+        if not success:
+            break
+
+        #img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        img_raw = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         img = np.float32(img_raw)
 
         # testing scale
@@ -129,7 +142,7 @@ if __name__ == '__main__':
 
         tic = time.time()
         loc, conf, landms = net(img)  # forward pass
-        print('net forward time: {:.4f}'.format(time.time() - tic))
+        #print('net forward time: {:.4f}'.format(time.time() - tic))
 
         priorbox = PriorBox(cfg, image_size=(im_height, im_width))
         priors = priorbox.forward()
@@ -139,24 +152,24 @@ if __name__ == '__main__':
         boxes = boxes * scale / resize
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
-        landms = decode_landm(landms.data.squeeze(0), prior_data, cfg['variance'])
+        #landms = decode_landm(landms.data.squeeze(0), prior_data, cfg['variance'])
         scale1 = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2]])
         scale1 = scale1.to(device)
-        landms = landms * scale1 / resize
-        landms = landms.cpu().numpy()
+        #landms = landms * scale1 / resize
+        #landms = landms.cpu().numpy()
 
         # ignore low scores
         inds = np.where(scores > args.confidence_threshold)[0]
         boxes = boxes[inds]
-        landms = landms[inds]
+        #landms = landms[inds]
         scores = scores[inds]
 
         # keep top-K before NMS
         order = scores.argsort()[::-1][:args.top_k]
         boxes = boxes[order]
-        landms = landms[order]
+        #landms = landms[order]
         scores = scores[order]
 
         # do NMS
@@ -164,13 +177,13 @@ if __name__ == '__main__':
         keep = py_cpu_nms(dets, args.nms_threshold)
         # keep = nms(dets, args.nms_threshold,force_cpu=args.cpu)
         dets = dets[keep, :]
-        landms = landms[keep]
+        #landms = landms[keep]
 
         # keep top-K faster NMS
         dets = dets[:args.keep_top_k, :]
-        landms = landms[:args.keep_top_k, :]
+        #landms = landms[:args.keep_top_k, :]
 
-        dets = np.concatenate((dets, landms), axis=1)
+        #dets = np.concatenate((dets, landms), axis=1)
 
         # show image
         if args.save_image:
@@ -179,6 +192,13 @@ if __name__ == '__main__':
                     continue
                 text = "{:.4f}".format(b[4])
                 b = list(map(int, b))
+                # mosaic
+                roi = img_raw[b[1]:b[3], b[0]:b[2]]
+                ry, rx, _ = roi.shape
+                roi = cv2.resize(roi, (rx // 20, ry // 20))
+                roi = cv2.resize(roi, (rx, ry), interpolation = cv2.INTER_AREA)
+                img_raw[b[1]:b[3], b[0]:b[2]] = roi
+
                 cv2.rectangle(img_raw, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 2)
                 cx = b[0]
                 cy = b[1] + 12
@@ -186,13 +206,23 @@ if __name__ == '__main__':
                             cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255))
 
                 # landms
-                cv2.circle(img_raw, (b[5], b[6]), 1, (0, 0, 255), 4)
-                cv2.circle(img_raw, (b[7], b[8]), 1, (0, 255, 255), 4)
-                cv2.circle(img_raw, (b[9], b[10]), 1, (255, 0, 255), 4)
-                cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
-                cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
+                #cv2.circle(img_raw, (b[5], b[6]), 1, (0, 0, 255), 4)
+                #cv2.circle(img_raw, (b[7], b[8]), 1, (0, 255, 255), 4)
+                #cv2.circle(img_raw, (b[9], b[10]), 1, (255, 0, 255), 4)
+                #cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
+                #cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
             # save image
 
-            name = "test5.jpg"
-            cv2.imwrite(name, img_raw)
+            #name = "test5.jpg"
+            #cv2.imwrite(name, img_raw)
+            img_raw = cv2.cvtColor(img_raw, cv2.COLOR_RGB2BGR)
+            #cv2.imshow('Video', image)
+            print("Writing frame {} / {}".format(frame_number, length))
+            output_movie.write(img_raw)
+            # Hit 'q' on the keyboard to quit!
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+# Release handle to the webcam
+cap.release()
+cv2.destroyAllWindows()
 

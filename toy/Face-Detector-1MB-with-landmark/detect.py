@@ -95,13 +95,16 @@ if __name__ == '__main__':
     device = torch.device("cpu" if args.cpu else "cuda")
     net = net.to(device)
 
-    cap = cv2.VideoCapture("stop.mp4")
+    input_video = "stop.mp4"
+    output_video = "output_"+str(args.vis_thres)+"_"+input_video
+
+    cap = cv2.VideoCapture(input_video)
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    output_movie = cv2.VideoWriter("output_stop_tiny_mosaic.mp4", fourcc, 29.97, (width, height))
+    output_movie = cv2.VideoWriter(output_video, fourcc, 29.97, (width, height))
     frame_number = 0
 
     # testing begin
@@ -195,7 +198,9 @@ if __name__ == '__main__':
                 # mosaic
                 roi = img_raw[b[1]:b[3], b[0]:b[2]]
                 ry, rx, _ = roi.shape
-                roi = cv2.resize(roi, (rx // 20, ry // 20))
+                if ry <= 15 or rx <= 15:
+                    continue
+                roi = cv2.resize(roi, (rx // 15, ry // 15))
                 roi = cv2.resize(roi, (rx, ry), interpolation = cv2.INTER_AREA)
                 img_raw[b[1]:b[3], b[0]:b[2]] = roi
 

@@ -2,14 +2,32 @@ from pymongo import MongoClient
 import datetime
 
 client = MongoClient(['mongodb+srv://cluster0.hetsy.mongodb.net'], 27017, username='sumin', password='AjOUqvMAUryqMMBe')
-db = client['test-database']
-collection = db['test-collection']
-post = {"author": "Mike",
-        "text": "My first blog post!",
-        "tags": ["mongodb", "python", "pymongo"],
-        "date": datetime.datetime.utcnow()}
 
-posts = db.posts
-post_id = posts.insert_one(post).inserted_id
+db = client['GARIGO']
+authCollection = db['auth']
 
-print(post_id)
+
+def getUserById(id):
+    user = db.auths.find_ond({
+        "id": id,
+    })
+    return user is not None
+
+
+def getUser(id, pw):
+    user = db.auths.find_ond({
+        "id": id,
+        "pw": pw,
+    })
+
+    return user is not None
+
+
+def createUser(id, pw):
+    user = {
+        "id": id,
+        "pw": pw
+    }
+
+    _id = db.auths.insert_one(user).inserted_id
+    return _id

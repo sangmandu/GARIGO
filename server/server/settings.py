@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'j+*$n!515b0@1#oyed+kgmquhg$55yn9m%t7+pz)8yu0qo2v3s'
+SECRET_KEY = 'jh7i=iyrfo=iqfh@wir4^#9ut#l@&jnby%o@@)6*rang_(4r6q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -54,7 +54,8 @@ ROOT_URLCONF = 'server.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates']
+        ,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -79,6 +80,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django_mongodb_engine',
+#         'NAME': 'test',
+#         'USER': 'sumin',
+#         'PASSWORD': 'AjOUqvMAUryqMMBe',
+#         'HOST': 'cluster0.hetsy.mongodb.net',
+#         'PORT': '27017',
+#     }
+# }
 
 
 # Password validation

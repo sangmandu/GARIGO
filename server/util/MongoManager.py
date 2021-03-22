@@ -8,19 +8,19 @@ authCollection = db['auth']
 
 
 def getUserById(id):
-    user = db.auths.find_ond({
+    user = db.auths.find_one({
         "id": id,
     })
     return user is not None
 
 
 def getUser(id, pw):
-    user = db.auths.find_ond({
+    user = db.auths.find_one({
         "id": id,
         "pw": pw,
     })
 
-    return user is not None
+    return user
 
 
 def createUser(id, pw):

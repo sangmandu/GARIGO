@@ -10,7 +10,7 @@ import GoogleMaps from "views/Maps/GoogleMaps.js";
 import GridSystem from "views/Components/GridSystem.js";
 import Icons from "views/Components/Icons.js";
 import LockScreenPage from "views/Pages/LockScreenPage.js";
-import LoginPage from "views/Pages/LoginPage.js";
+import LoginPage from "views/Pages/Auth/LoginPage.js";
 import Notifications from "views/Components/Notifications.js";
 import Panels from "views/Components/Panels.js";
 import PricingPage from "views/Pages/PricingPage.js";

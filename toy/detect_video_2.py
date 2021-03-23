@@ -55,6 +55,7 @@ parser.add_argument('--vis_thres', default=0.6, type=float, help='visualization_
 parser.add_argument('--input', default="input.mp4", type = str, help = "input video name")
 args = parser.parse_args()
 
+# 두 로케이션에 대하여 비슷한 위치와 크기인지의 여부를 판단.(상대적 값으로 바꿀 필요 남아있음)
 def isClose(loc1, loc2):
     top1, right1, bottom1, left1 = loc1
     top2, right2, bottom2, left2 = loc2
@@ -153,14 +154,15 @@ if __name__ == '__main__':
            'BHATTACHARYYA':cv2.HISTCMP_BHATTACHARYYA}
 
     # testing begin
-    while cap.isOpened() and frame_number < 800:
+    while cap.isOpened() and frame_number < 100:
         success, image = cap.read()
         frame_number += 1
         if not success:
             break
-        if frame_number < 700:
-            continue
+        #if frame_number < 700:
+        #    continue
 
+        # 이전 프레임과 현재 프레임간 유사도 측정
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         hist = cv2.calcHist([hsv], [0,1], None, [180, 256], [0,180,0,256])
         cv2.normalize(hist, hist, 0, 1, cv2.NORM_MINMAX)
@@ -171,6 +173,8 @@ if __name__ == '__main__':
         similarity = cv2.compareHist(ex_hist, hist, methods['CORREL'])
         print(similarity)
         ex_hist = hist
+
+
         #img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
         img_raw = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         img = np.float32(img_raw)
@@ -257,6 +261,8 @@ if __name__ == '__main__':
                 top, bottom, left, right = b[1], b[3], b[0], b[2]
 
                 face_locations.append((top, right, bottom, left))
+            
+            # detection된 얼굴이 있는 경우 처리
             if len(face_locations) != 0:
                 face_encodings = face_recognition.face_encodings(img_raw, face_locations)
                 face_names = []
@@ -278,10 +284,11 @@ if __name__ == '__main__':
                         name = known_face_names[best_match_index]
                     #else:
                     #    face_distances.append(1)
-
                     face_names.append(name)
-                if len(ex_known_face_locations) != 0:
-                    print("------")
+
+                # 이전 프레임과 유사한 프레임에서 전에 얼굴을 recognition한 자리에 unknown detection이 이루어진 경우
+                # 이전 프레임에서 recognition한 얼굴로 판별한다.
+                if len(ex_known_face_locations) != 0 and similarity > 0.9:
                     for i, face_location in enumerate(face_locations):
                         if face_names[i] == "Unknown":
                             for j, ex_known_face_location in enumerate(ex_known_face_locations):
@@ -294,7 +301,10 @@ if __name__ == '__main__':
                 ex_unknown_face_locations = []
                 Unknown_face_count = face_names.count('Unknown')
 
+                # 이전 프레임과 다른 프레임이거나, detection한 얼굴의 개수가 같은 경우,
+                # 혹은 이전에 detection한 얼굴이 없는 경우 새로 detection과 recognition진행
                 if similarity < 0.9 or (similarity > 0.9 and (Unknown_face_count == len(tmp_unknown_face) or len(tmp_unknown_face) == 0)):
+                    print("phase1",Unknown_face_count, len(tmp_unknown_face))
                     for (top, right, bottom, left), name in zip(face_locations, face_names):
                         # mosaic
                         if name == "Unknown":
@@ -306,6 +316,7 @@ if __name__ == '__main__':
                             roi = cv2.resize(roi, (rx // 30, ry // 30))
                             roi = cv2.resize(roi, (rx, ry), interpolation=cv2.INTER_AREA)
                             img_raw[top:bottom, left:right] = roi
+                            cv2.rectangle(img_raw, (left, top), (right, bottom), (255, 0, 0), 3)
 
                         else:
                             ex_known_face_locations.append((top, right, bottom , left))
@@ -317,7 +328,9 @@ if __name__ == '__main__':
                             font = cv2.FONT_HERSHEY_SIMPLEX
                             cv2.putText(img_raw, name, (left + 6, bottom + 6), font, 1.0, (255, 255, 255), 1)
 
+                # 이전 프레임과 유사한 프레임일때, 얼굴의 개수가 달라진 경우(보완 필요!!!!) 이전 프레임의 unknown-detection을 사용한다.
                 else:
+                    print("phase2",Unknown_face_count, len(tmp_unknown_face) )
                     for (top, right, bottom, left), name in zip(face_locations, face_names):
                         # mosaic
                         if name == "Unknown":
@@ -341,12 +354,42 @@ if __name__ == '__main__':
                         roi = cv2.resize(roi, (rx // 30, ry // 30))
                         roi = cv2.resize(roi, (rx, ry), interpolation=cv2.INTER_AREA)
                         img_raw[top:bottom, left:right] = roi
+                        cv2.rectangle(img_raw, (left, top), (right, bottom), (255, 0, 0), 3)
                     ex_unknown_face_locations = tmp_unknown_face.copy()
 
-            cv2.putText(img_raw, str(frame_number), (20,100), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (255,255,255), 1)
+            # 이전 프레임과 유사한 프레임임에도 detection과 recognition아무것도 하지 못했을 때,
+            # 이전 프레임의 detection과 recognition을 그대로 사용한다.
+            elif len(ex_unknown_face_locations) != 0 and similarity > 0.9:
+                print("phase3",Unknown_face_count, len(tmp_unknown_face) )
+                for (top, right, bottom, left), name in zip(ex_known_face_locations, ex_known_face_names):
+                    ex_known_face_locations.append((top, right, bottom , left))
+                    ex_known_face_names.append(name)
+                    # Draw a box around the face
+                    cv2.rectangle(img_raw, (left, top), (right, bottom), (0, 0, 255), 2)
+                    # Draw a label with a name below the face
+                    cv2.rectangle(img_raw, (left, bottom), (right, bottom + 35), (0, 0, 255), cv2.FILLED)
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(img_raw, name, (left + 6, bottom + 6), font, 1.0, (255, 255, 255), 1)
+
+
+                for (top, right, bottom, left) in tmp_unknown_face:
+                    roi = img_raw[top:bottom, left:right]
+                    ry, rx, _ = roi.shape
+                    if ry <= 30 or rx <= 30:
+                        continue
+                    roi = cv2.resize(roi, (rx // 30, ry // 30))
+                    roi = cv2.resize(roi, (rx, ry), interpolation=cv2.INTER_AREA)
+                    img_raw[top:bottom, left:right] = roi
+                    cv2.rectangle(img_raw, (left, top), (right, bottom), (255, 0, 0), 3)
+
+                
+                
+
+            cv2.putText(img_raw, str(frame_number), (20,100), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (255,0,0), 1)
             img_raw = cv2.cvtColor(img_raw, cv2.COLOR_RGB2BGR)
             #cv2.imshow('Video', image)
             print("Writing frame {} / {}".format(frame_number, length))
+            print("--------")
             output_movie.write(img_raw)
             # Hit 'q' on the keyboard to quit!
             if cv2.waitKey(1) & 0xFF == ord('q'):

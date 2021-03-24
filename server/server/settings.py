@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,7 +36,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages'
 ]
+
+AWS_ACCESS_KEY_ID = 'AKIAR26SC7FYQ4OZSQUM'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'garigo'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'path/to/store/my/files/')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'GARIGO/static'),
+]
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

@@ -23,12 +23,13 @@ class ProfileUploadView(APIView):
                 aws_access_key_id="AKIAR26SC7FY7ESCGFCB",
                 aws_secret_access_key="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",
             )
-            file = request.FILES['photo']
-            s3_client.put_object(
-                Body=file,
-                Bucket="garigo",
-                Key="file-name1",
-            )
+
+            for file in request.FILES.getlist('photos'):
+                s3_client.put_object(
+                    Body=file,
+                    Bucket="garigo",
+                    Key=str(uuid.uuid4()),
+                )
             return JsonResponse({'message': 'success'})
         else:
             return JsonResponse({'message': 'file_none'})

@@ -20,17 +20,14 @@ class ProfileUploadView(APIView):
         if len(request.FILES) != 0:
             s3_client = boto3.client(
                 's3',
-                aws_access_key_id="AKIAR26SC7FYQ4OZSQUM",
-                aws_secret_access_key="'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",
+                aws_access_key_id="AKIAR26SC7FY7ESCGFCB",
+                aws_secret_access_key="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",
             )
             file = request.FILES['photo']
-            s3_client.upload_fileobj(
-                file,
-                "bucket-name",
-                "file-name",
-                ExtraArgs={
-                    "ContentType": file.content_type,
-                }
+            s3_client.put_object(
+                Body=file,
+                Bucket="garigo",
+                Key="file-name1",
             )
             return JsonResponse({'message': 'success'})
         else:

@@ -181,7 +181,7 @@ material-dashboard-pro-react
     │   ├── Tasks
     │   │   └── Tasks.js
     │   ├── Timeline
-    │   │   └── Timeline.js
+    │   │   └── HorizontalLabelPositionBelowStepper.js
     │   ├── Typography
     │   │   ├── Danger.js
     │   │   ├── Info.js
@@ -236,7 +236,7 @@ material-dashboard-pro-react
         │   ├── PricingPage.js
         │   ├── RTLSupport.js
         │   ├── RegisterPage.js
-        │   ├── Timeline.js
+        │   ├── HorizontalLabelPositionBelowStepper.js
         │   └── UserProfile.js
         ├── Tables
         │   ├── ExtendedTables.js

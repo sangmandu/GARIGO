@@ -20,7 +20,7 @@ import RegisterPage from "views/Pages/RegisterPage.js";
 import RegularForms from "views/Forms/RegularForms.js";
 import RegularTables from "views/Tables/RegularTables.js";
 import SweetAlert from "views/Components/SweetAlert.js";
-import TimelinePage from "views/Pages/Timeline.js";
+import TimelinePage from "views/Pages/HorizontalLabelPositionBelowStepper.js";
 import Typography from "views/Components/Typography.js";
 import UserProfile from "views/Pages/UserProfile.js";
 import ValidationForms from "views/Forms/ValidationForms.js";

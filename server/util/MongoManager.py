@@ -1,7 +1,8 @@
+import collections
+
 from pymongo import MongoClient
 import datetime
-
-client = MongoClient(['mongodb+srv://cluster0.hetsy.mongodb.net'], 27017, username='sumin', password='AjOUqvMAUryqMMBe')
+client = MongoClient(['mongodb+srv://cluster0.kvjf8.mongodb.net'], 27017, username='kijoo', password='BBQqeWXzmi5EOU0Y')
 
 db = client['GARIGO']
 authCollection = db['auth']
@@ -31,3 +32,27 @@ def createUser(id, pw):
 
     _id = db.auths.insert_one(user).inserted_id
     return _id
+
+
+def createMedia(pid, name, index, fileUid):
+    info = {
+        "pid": pid,
+        "name": name,
+        "index": index,
+        "fileUid": fileUid
+    }
+
+    _id = db.medias.insert_one(info).inserted_id
+    return _id
+
+def getImageByPid(pid):
+    images = db.medias.find({
+        "pid": pid
+    })
+
+    imageDict = collections.defaultdict(list)
+    for image in images:
+        imageDict[image['name']].append(image)
+
+    return imageDict
+

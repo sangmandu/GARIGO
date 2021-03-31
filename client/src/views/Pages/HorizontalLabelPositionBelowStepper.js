@@ -1,6 +1,5 @@
 import React from 'react';
 import {DropzoneArea} from 'material-ui-dropzone';
-import ImageUploader from "react-images-upload";
 import {makeStyles} from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
@@ -10,11 +9,17 @@ import Typography from '@material-ui/core/Typography';
 import axios from "axios";
 
 class MyUploader extends React.Component {
+
     constructor(props) {
         super(props);
         this.state = {pictures: []};
         this.onDrop = this.onDrop.bind(this);
     }
+
+    reset = () => {
+        this.setState({key: 0, files: []});
+    };
+
 
     onDrop(pictureFiles, pictureDataURLs) {
         this.setState({
@@ -23,7 +28,7 @@ class MyUploader extends React.Component {
     }
 
     render() {
-        const onClickSendImage = (e) => {
+        const onClickSendImage = async (e) => {
             e.preventDefault();
             const formData = new FormData();
 
@@ -31,25 +36,54 @@ class MyUploader extends React.Component {
                 formData.append("photos", file);
             });
 
-            axios({
-                method: "post",
-                url: 'http://localhost:8000/media/',
-                data: formData,
-                headers: {"Content-Type": "multipart/form-data", Authorization: localStorage.getItem("access_token")}
-            });
-        };
+            if (!(!!this.props.pid)) {
+                let response = await axios({
+                    method: "post",
+                    url: 'http://localhost:8000/media/',
+                    data: formData,
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: localStorage.getItem("access_token")
+                    }
+                });
+
+                this.props.changePid(response.data['pid']);
+                this.reset();
+            } else {
+                formData.append('pid', this.props.pid);
+                let response = await axios({
+                    method: "post",
+                    url: 'http://localhost:8000/media/',
+                    data: formData,
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: localStorage.getItem("access_token")
+                    }
+                });
+
+                this.reset();
+            }
+
+            console.log(this.state.pictures)
+        }
+
         return (
-            <div>
-                <DropzoneArea
-                    acceptedFiles={['image/*']}
-                    dropzoneText={"Drag and drop an image here or click"}
-                    onChange={(files) => {
-                        console.log('Files:', files);
-                        this.setState({
-                            pictures: files
-                        });
-                    }}
-                />
+            <div key={this.state.key}>
+                <p>{this.props.pid}</p>
+                {
+                    <DropzoneArea
+                        dropzoneText={"Drag and drop an image here or click"}
+                        filesLimit={100}
+                        maxFileSize={300000000}
+                        fileObjects={this.state.pictures}
+                        onChange={(files) => {
+                            console.log('Files:', files);
+                            this.setState({
+                                pictures: files
+                            });
+                        }}
+                    />
+                }
                 <Button onClick={onClickSendImage}>사진 전송</Button>
             </div>
         );
@@ -78,7 +112,7 @@ function getStepContent(stepIndex) {
         case 0:
             return '사진 업로드 대기 중...';
         case 1:
-            return 'What is an ad group anyways?';
+            return '영상 업로드 대기 중...';
         case 2:
             return 'This is the bit I really care about!';
         default:
@@ -89,6 +123,7 @@ function getStepContent(stepIndex) {
 export default function HorizontalLabelPositionBelowStepper() {
     const classes = useStyles();
     const [activeStep, setActiveStep] = React.useState(0);
+    const [pid, setPid] = React.useState(null);
     const steps = getSteps();
 
     const handleNext = () => {
@@ -102,6 +137,22 @@ export default function HorizontalLabelPositionBelowStepper() {
     const handleReset = () => {
         setActiveStep(0);
     };
+
+    const changePid = (newPid) => {
+        setPid(newPid);
+    };
+
+    const renderSwitch = (activeStep) => {
+        console.log(activeStep)
+        switch (activeStep) {
+            case 0:
+                return (<MyUploader changePid={changePid}/>);
+            case 1:
+                return (<MyUploader pid={pid} changePid={changePid}/>);
+            // default:
+            //     return <MyUploader pid={pid} changePid={changePid}/>;
+        }
+    }
 
 
     return (
@@ -137,7 +188,12 @@ export default function HorizontalLabelPositionBelowStepper() {
                     </div>
                 )}
             </div>
-            <MyUploader/>
+            <p>{pid}</p>
+            {
+                renderSwitch(activeStep)
+                // pid ? <p>aaa</p> : <MyUploader changePid={changePid}/>
+            }
+            {/*<MyUploader changePid={changePid}/>*/}
         </div>
     );
 }

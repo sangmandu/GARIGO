@@ -52,7 +52,6 @@ class ProfileUploadView(APIView):
                 )
 
                 createMedia(pid, name.split("_")[0], name.split("_")[1], fileUid)
-            return JsonResponse({'message': pid})
+            return JsonResponse({'pid': pid})
         else:
             return JsonResponse({'message': 'file_none'})
-            

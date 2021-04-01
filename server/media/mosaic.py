@@ -12,7 +12,7 @@ import urllib.request
 def mosaic_video(recog_list, recog_images, video_route, video_name):
     ROOT_DIR = os.getcwd()
     path = os.path.join(ROOT_DIR, 'output_video/')
-    print(path)
+    # print(path)
     known = {}
 
     for name in recog_list:
@@ -71,7 +71,7 @@ def mosaic_video(recog_list, recog_images, video_route, video_name):
             ex_frame = np.zeros([height, width, 3])
             # print(ex_frame.shape)
             # testing begin
-            while cap.isOpened() and frame_number < 7:
+            while cap.isOpened():
                 success, image = cap.read()
                 frame_number += 1
                 if not success:

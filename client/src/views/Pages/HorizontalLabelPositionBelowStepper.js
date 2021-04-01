@@ -36,33 +36,34 @@ class MyUploader extends React.Component {
                 formData.append("photos", file);
             });
 
-            if (!(!!this.props.pid)) {
-                let response = await axios({
-                    method: "post",
-                    url: 'http://localhost:8000/media/',
-                    data: formData,
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: localStorage.getItem("access_token")
-                    }
-                });
+            console.log(this.props.pid)
 
-                this.props.changePid(response.data['pid']);
-                this.reset();
-            } else {
+            if (!!this.props.pid) {
                 formData.append('pid', this.props.pid);
-                let response = await axios({
-                    method: "post",
-                    url: 'http://localhost:8000/media/',
-                    data: formData,
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: localStorage.getItem("access_token")
-                    }
-                });
-
-                this.reset();
             }
+
+            let response = await axios({
+                method: "post",
+                url: 'http://localhost:8000/media/',
+                data: formData,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    Authorization: localStorage.getItem("access_token")
+                }
+            });
+
+            if (!(!!this.props.pid)) {
+                this.props.changePid(response.data['pid']);
+            } else {
+            }
+
+            this.reset();
+
+            if (!!this.props.completeImageUpload) {
+                this.props.completeImageUpload();
+            }
+
+            console.log(formData);
 
             console.log(this.state.pictures)
         }
@@ -124,6 +125,7 @@ export default function HorizontalLabelPositionBelowStepper() {
     const classes = useStyles();
     const [activeStep, setActiveStep] = React.useState(0);
     const [pid, setPid] = React.useState(null);
+    const [disable0, setDisable0] = React.useState(true);
     const steps = getSteps();
 
     const handleNext = () => {
@@ -139,18 +141,21 @@ export default function HorizontalLabelPositionBelowStepper() {
     };
 
     const changePid = (newPid) => {
+        console.log('aaa' + newPid);
         setPid(newPid);
     };
+
+    const completeImageUpload = () => {
+        setDisable0(false);
+    }
 
     const renderSwitch = (activeStep) => {
         console.log(activeStep)
         switch (activeStep) {
             case 0:
-                return (<MyUploader changePid={changePid}/>);
+                return (<MyUploader pid={pid} completeImageUpload={completeImageUpload} changePid={changePid}/>);
             case 1:
                 return (<MyUploader pid={pid} changePid={changePid}/>);
-            // default:
-            //     return <MyUploader pid={pid} changePid={changePid}/>;
         }
     }
 
@@ -181,7 +186,7 @@ export default function HorizontalLabelPositionBelowStepper() {
                             >
                                 Back
                             </Button>
-                            <Button variant="contained" color="primary" onClick={handleNext}>
+                            <Button variant="contained" color="primary" onClick={handleNext} disabled={disable0}>
                                 {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
                             </Button>
                         </div>

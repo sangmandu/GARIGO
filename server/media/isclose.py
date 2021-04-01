@@ -22,7 +22,7 @@ def isClose(loc1, loc2):
       H.sort()
       V.sort()
       area = (H[2] - H[1]) * (V[2] - V[1])
-      print("ratio:", area / areaFunc(*loc1) , area / areaFunc(*loc2))
+      # print("ratio:", area / areaFunc(*loc1) , area / areaFunc(*loc2))
       if area / areaFunc(*loc1) >= 0.4 or area / areaFunc(*loc2) >= 0.4:
         return True
       else:

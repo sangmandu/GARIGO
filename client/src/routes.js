@@ -74,7 +74,7 @@ var dashRoutes = [
       },
       {
         path: "/timeline-page",
-        name: "Timeline Page",
+        name: "GARIGO",
         rtlName: "تيالجدول الزمني",
         mini: "T",
         rtlMini: "تي",

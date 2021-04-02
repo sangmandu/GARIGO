@@ -8,6 +8,37 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import axios from "axios";
 
+import LinearProgress from '@material-ui/core/LinearProgress';
+import {Link} from "@material-ui/core";
+
+export function LinearDeterminate(props) {
+    const classes = useStyles();
+    const [progress, setProgress] = React.useState(0);
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setProgress((oldProgress) => {
+                if (oldProgress === 100) {
+                    props.changeIsCompleted();
+                    clearInterval(timer);
+                }
+                const diff = Math.random() * 10;
+                return Math.min(oldProgress + diff, 100);
+            });
+        }, 500);
+
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
+
+    return (
+        <div className={classes.root}>
+            <LinearProgress variant="determinate" value={progress}/>
+        </div>
+    );
+}
+
 class MyUploader extends React.Component {
 
     constructor(props) {
@@ -69,9 +100,8 @@ class MyUploader extends React.Component {
         }
 
         return (
-            <div key={this.state.key}>
-                <p>{this.props.pid}</p>
-                {
+            <div key={this.state.key} style={{display: 'flex', flexDirection: 'column'}}>
+                { 
                     <DropzoneArea
                         dropzoneText={"Drag and drop an image here or click"}
                         filesLimit={100}
@@ -85,7 +115,9 @@ class MyUploader extends React.Component {
                         }}
                     />
                 }
-                <Button onClick={onClickSendImage}>사진 전송</Button>
+                <Button
+                    style={{display: 'flex', alignSelf: 'center', justifySelf: 'center', flex: 1, marginTop: '1rem'}}
+                    variant="contained" color="primary" onClick={onClickSendImage}>사진 전송</Button>
             </div>
         );
     }
@@ -104,10 +136,6 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function getSteps() {
-    return ['모자이크 처리하지않을 얼굴 사진 올려주세요', '모자이크 처리할 동영상을 업로드해주세요.', '완성되었습니다'];
-}
-
 function getStepContent(stepIndex) {
     switch (stepIndex) {
         case 0:
@@ -115,7 +143,7 @@ function getStepContent(stepIndex) {
         case 1:
             return '영상 업로드 대기 중...';
         case 2:
-            return 'This is the bit I really care about!';
+            return '';
         default:
             return 'Unknown stepIndex';
     }
@@ -126,7 +154,12 @@ export default function HorizontalLabelPositionBelowStepper() {
     const [activeStep, setActiveStep] = React.useState(0);
     const [pid, setPid] = React.useState(null);
     const [disable0, setDisable0] = React.useState(true);
+    const [isCompleted, setIsCompleted] = React.useState(false);
     const steps = getSteps();
+
+    function getSteps() {
+        return ['모자이크 처리하지않을 얼굴 사진 올려주세요', '모자이크 처리할 동영상을 업로드해주세요.', isCompleted ? '완성되었습니다' : '모자이크 처리 작업중'];
+    }
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -141,21 +174,25 @@ export default function HorizontalLabelPositionBelowStepper() {
     };
 
     const changePid = (newPid) => {
-        console.log('aaa' + newPid);
         setPid(newPid);
     };
+
+    const changeIsCompleted = () => {
+        setIsCompleted(true);
+    }
 
     const completeImageUpload = () => {
         setDisable0(false);
     }
 
     const renderSwitch = (activeStep) => {
-        console.log(activeStep)
         switch (activeStep) {
             case 0:
                 return (<MyUploader pid={pid} completeImageUpload={completeImageUpload} changePid={changePid}/>);
             case 1:
                 return (<MyUploader pid={pid} changePid={changePid}/>);
+            case 2:
+                return (<LinearDeterminate changeIsCompleted={changeIsCompleted}/>);
         }
     }
 
@@ -193,12 +230,17 @@ export default function HorizontalLabelPositionBelowStepper() {
                     </div>
                 )}
             </div>
-            <p>{pid}</p>
             {
                 renderSwitch(activeStep)
-                // pid ? <p>aaa</p> : <MyUploader changePid={changePid}/>
             }
-            {/*<MyUploader changePid={changePid}/>*/}
+
+            {
+                isCompleted ? (<div style={{ marginTop:'2rem'}}><Link
+                    style={{fontSize: '2rem', marginTop: '2rem', padding: '2rem'}}
+                    href="https://garigo.s3.ap-northeast-2.amazonaws.com/fe895e07-ae01-4c09-846c-f58dcab29b41.mp4">
+                    Download
+                </Link></div>) : ''
+            }
         </div>
     );
 }

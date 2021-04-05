@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#etc
+.DS_store
+.vscode/launch.json
+server/auth/__pycache__/
+server/.DS_Store
+server/media/.DS_Store
+server/media/__pycache__/
+server/server/__pycache__/
+server/util/__pycache__/
